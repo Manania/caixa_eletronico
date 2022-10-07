@@ -207,9 +207,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public static void main(String arg[]){
-/* 
         GUI janela = new GUI(CaixaEletronico.class);
         janela.show();
-         */
     }
 }
