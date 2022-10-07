@@ -14,7 +14,9 @@ public class CaixaEletronico implements ICaixaEletronico {
      * };
      * </pre>
      */
-    private final static int VALOR = 0, QNTDE = 1;
+    final private static int VALOR = 0, QNTDE = 1;
+    final private static String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
+        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
     private int[][] cedulas;
     private int cotaMinima, maxCedulaSaque;
 
@@ -43,9 +45,7 @@ public class CaixaEletronico implements ICaixaEletronico {
 
     public String pegaValorTotalDisponivel() {
         //logica de pega o valor total disponivel no caixa eletronico
-        long valor = 0;
-        for(int[] cedula : cedulas) { valor += cedula[VALOR] * cedula[QNTDE]; }
-        return "R$ %d.00".formatted(valor);
+        return "R$ %d.00".formatted(valorTotalDiposnivel());
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
@@ -70,8 +70,12 @@ public class CaixaEletronico implements ICaixaEletronico {
     public String sacar(Integer valor) {
         //logica de sacar do caixa eletronico e criar um mensagem(resposta) ao 
         //usuario
-        if(valor <= 0) { return "Erro. Valor inválido"; }
-        
+        if(valor <= 0) { return "Erro. Valor de saque invalido"; }
+
+        if((valorTotalDiposnivel() - valor) < cotaMinima) {
+            return MSG_VALOR_ABAIXO_MINIMO;
+        }
+
         int[][] cedulaDisponiveis = new int[this.cedulas.length][];
         for(int i = 0; i < this.cedulas.length; i++) { 
             System.arraycopy(this.cedulas[i], 0, cedulaDisponiveis[i], 0, this.cedulas.length); 
@@ -79,7 +83,7 @@ public class CaixaEletronico implements ICaixaEletronico {
         }
 
         int[][] saque = combinacaoCedulas(valor, cedulaDisponiveis, this.maxCedulaSaque);
-        if(saque == null) { return "Não é possivel realizar o saque"; }
+        if(saque == null) { return MSG_SAQUE_INDISPONIVEL; }
         
         for(int i = 0; i < saque.length; i++){
             this.cedulas[i][QNTDE] -= saque[i][QNTDE];
@@ -107,12 +111,19 @@ public class CaixaEletronico implements ICaixaEletronico {
         return false;
     }
 
+    private int valorTotalDiposnivel() {
+        int total = 0;
+        for(int[] cedula : cedulas) { total += cedula[VALOR] * cedula[QNTDE]; }
+        return total;
+    }
+
     /**
      * Função para encontrar um subconjunto em set, cuja soma dos elementos é igual a target.
      * Os elementos do subconjunto encontrado são retornados pelo parametro subset.
      * Retorna um vetor com a soma dos elementos e comprimento do subconjunto.
      * O tamanho máximo do subconjunto é especificado pelo parametro max_size (inclusivo).
-     * Para garantir que o menor subconjunto seja encontrado, set deve estar ordenado em ordem decrescente
+     * Para garantir que o menor subconjunto seja encontrado, set deve estar ordenado em ordem decrescente.
+     * O comportamento da função é indefinido para target <= 0
      * @param target soma dos elementos do subconjunto
      * @param total deve ser 0
      * @param set conjunto a ser explorado
