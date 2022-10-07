@@ -81,6 +81,10 @@ public class CaixaEletronico implements ICaixaEletronico {
         int[][] saque = combinacaoCedulas(valor, cedulaDisponiveis, this.maxCedulaSaque);
         if(saque == null) { return "Não é possivel realizar o saque"; }
         
+        for(int i = 0; i < saque.length; i++){
+            this.cedulas[i][QNTDE] -= saque[i][QNTDE];
+        }
+        
         StringBuilder str = new StringBuilder();
         for(int[] cedula : saque){
             str.append("%3d : %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
