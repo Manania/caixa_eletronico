@@ -1,4 +1,9 @@
 public class CaixaEletronico implements ICaixaEletronico {
+    final private static int VALOR = 0, QNTDE = 1;
+    final private static String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
+        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
+
+    private int cotaMinima, maxCedulaSaque;
     /**
      * Cada cedula possui um vetor próprio de comprimento dois. O primeiro elemento é o valor e o segundo a quantidade. 
      * <pre>
@@ -14,11 +19,7 @@ public class CaixaEletronico implements ICaixaEletronico {
      * };
      * </pre>
      */
-    final private static int VALOR = 0, QNTDE = 1;
-    final private static String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
-        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
     private int[][] cedulas;
-    private int cotaMinima, maxCedulaSaque;
 
     public CaixaEletronico() {
         cedulas = new int[][]{
