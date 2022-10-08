@@ -20,38 +20,33 @@ public class CaixaEletronico implements ICaixaEletronico {
      * </pre>
      */
     private int[][] cedulas;
+    private ICombinador combinador;
 
     public CaixaEletronico() {
-        cedulas = new int[][]{
-            {100, 0},
-            { 50, 0},
-            { 20, 0},
-            { 10, 0},
-            {  5, 0},
-            {  2, 0}
-        };
-        cotaMinima = 0;
-        maxCedulaSaque = 30;
+        this(new int[][] { {100, 0}, { 50, 0}, { 20, 0}, { 10, 0}, {  5, 0}, {  2, 0} }, 
+        0, 30, new CombinadorRecusivo());       
+    }
+
+    private CaixaEletronico(int[][] cedulas, int cotaMinima, int maxCedulaSaque, ICombinador combinador){
+        this.cedulas = cedulas;
+        this.cotaMinima = cotaMinima;
+        this.maxCedulaSaque = maxCedulaSaque;
+        this.combinador = combinador;
     }
   
     public String pegaRelatorioCedulas() {
-        //logica de fazer o relatorio de cedulas
         StringBuilder resposta = new StringBuilder();
         for(int[] cedula : cedulas) {
-            resposta.append("\"R$ %1$-3d\": %2$-4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
+            resposta.append("\"%3d\": %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
         }
-
         return resposta.toString();
     }
 
     public String pegaValorTotalDisponivel() {
-        //logica de pega o valor total disponivel no caixa eletronico
-        return "R$ %d.00".formatted(valorTotalDiposnivel());
+        return "R$ %.2d".formatted(valorTotalDiposnivel());
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
-        //logica de fazer a reposicao de cedulas e criar uma mensagem
-        //(resposta)ao usuario
         if(!cedulaExiste(cedula)) {
             return "Erro. Cédulas de valor R$ %d não são suportadas".formatted(cedula);
         }
@@ -69,37 +64,24 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String sacar(Integer valor) {
-        //logica de sacar do caixa eletronico e criar um mensagem(resposta) ao 
-        //usuario
         if(valor <= 0) { return "Erro. Valor de saque invalido"; }
+        if((valorTotalDiposnivel() - valor) < cotaMinima) { return MSG_VALOR_ABAIXO_MINIMO; }
 
-        if((valorTotalDiposnivel() - valor) < cotaMinima) {
-            return MSG_VALOR_ABAIXO_MINIMO;
-        }
-
-        int[][] cedulaDisponiveis = new int[this.cedulas.length][];
-        for(int i = 0; i < this.cedulas.length; i++) { 
-            System.arraycopy(this.cedulas[i], 0, cedulaDisponiveis[i], 0, this.cedulas.length); 
-            //combinacao[i] = Arrays.copyOf(this.cedulas[i], this.cedulas.length);
-        }
-
-        int[][] saque = combinacaoCedulas(valor, cedulaDisponiveis, this.maxCedulaSaque);
+        int[][] saque = combinador.calcularCombinacao(valor, this.cedulas, this.maxCedulaSaque);
         if(saque == null) { return MSG_SAQUE_INDISPONIVEL; }
         
-        for(int i = 0; i < saque.length; i++){
+        for(int i = 0; i < saque.length; i++) {
             this.cedulas[i][QNTDE] -= saque[i][QNTDE];
         }
         
         StringBuilder str = new StringBuilder();
-        for(int[] cedula : saque){
+        for(int[] cedula : saque) {
             str.append("%3d : %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
         }
         return str.toString();
     }
 
     public String armazenaCotaMinima(Integer minimo) {
-        //logica de armazenar a cota minima para saque e criar um
-        //mensagem(resposta)ao usuario
         if(minimo > 0) { this.cotaMinima = minimo; } 
         else { this.cotaMinima = 0; }
         return "Cota minima registrada com sucesso";
@@ -117,14 +99,103 @@ public class CaixaEletronico implements ICaixaEletronico {
         for(int[] cedula : cedulas) { total += cedula[VALOR] * cedula[QNTDE]; }
         return total;
     }
+   
+    public interface ICombinador {
+        /**
+         * <p>Retorna uma "tabela" com a combinação de cédulas cuja soma é igual a valor.</p>
+         * <p>Se não houver combinação real, o retorno deve ser null.</p>
+         * <p>Cada subvetor da tabela deve seguir o seguinte formato: {valor, quantidade}.</p>
+         * <pre>
+         * Ex: new int[][]{
+         *      {200, 50},
+         *      {100, 32},
+         *      {50, 130},
+         *      {20, 150},
+         *      {10, 20}, 
+         *      {5, 42},
+         *      {2, 31}
+         * }
+         * </pre>
+         * <p>O comportamento do método para valor <= 0 é indefinido.</p>
+         * <p>O comportamento do método para max_cedulas <= 0 é indefinido</p>
+         * <p>O objeto referenciado por cedulas NÃO pode ser modificado.
+         * @param valor Valor total da combinação
+         * @param cedulas Matriz com o número de cédulas disponiveis
+         * @param max_cedulas Número máximo de cédulas em uma combinação
+         * @return Combinação de cédulas cuja soma é igual a valor
+         */
+        int[][] calcularCombinacao(int valor, int[][] cedulas, int max_cedulas);
+    }
+
+    public static void main(String arg[]){
+        GUI janela = new GUI(CaixaEletronico.class);
+        janela.show();
+    }
+}
+
+final class CombinadorRecusivo implements CaixaEletronico.ICombinador {
+    /**
+     * <p>Detalhes da implementação:</p>
+     * <p>Se valor <= 0, o returno é null.</p>
+     * <p>Se max_cedulas <= 0, o limite de cédulas é: trunc(alvo / valor_menor_cedula)</p>
+     */
+    public int[][] calcularCombinacao(int valor, int[][] cedulas, int max_cedulas) {
+        return calcularCedulasMutavel(valor, arrayDeepCopy(cedulas), max_cedulas);
+    }
+
+    private static int[][] arrayDeepCopy(int[][] src) {
+        int[][] copy = new int[src.length][];
+        for(int i = 0; i < src.length; i++) { 
+            copy[i] = new int[src[i].length];
+            System.arraycopy(src[i], 0, copy[i], 0, src[i].length); 
+        }
+        return copy;
+    }
+
+    private static int[][] calcularCedulasMutavel(int valor, int[][] cedulas, int max_cedulas) {
+        final int VALOR = 0, QNTD = 1;
+        
+        if(valor <= 0) { return null; }
+        if(max_cedulas <= 0) { max_cedulas = valor / cedulas[cedulas.length -1][VALOR]; } 
+
+        int set_lenght = 0;
+        for(int i = 0; i < cedulas.length; i++){
+            cedulas[i][QNTD] = Math.min(cedulas[i][QNTD], (int)Math.ceil(valor / cedulas[i][VALOR]));
+            cedulas[i][QNTD] = Math.min(cedulas[i][QNTD], max_cedulas);
+            set_lenght += cedulas[i][QNTD];
+        }
+
+        final int[] set = new int[set_lenght];
+        for(int i = 0, added = 0; i < cedulas.length; i++) {
+            for(int j = 0; j < cedulas[i][QNTD]; j++) {
+                set[added++] = cedulas[i][VALOR];
+            }
+        }
+                
+        final int[] subset = new int[set_lenght];
+        final int[] result = findSubset(valor, 0, set, 0, subset, 0, max_cedulas);
+        if(result[0] != valor){
+            return null;
+        }
+
+        final int SUBSET_LEN = result[1];
+        for(int i = 0, j = 0; i < cedulas.length; i++) {
+            cedulas[i][QNTD] = 0;
+            while(j < SUBSET_LEN && subset[j] == cedulas[i][VALOR]) {
+                cedulas[i][QNTD]++;
+                j++;
+            }
+        }
+        return cedulas;
+    }
 
     /**
-     * Função para encontrar um subconjunto em set, cuja soma dos elementos é igual a target.
-     * Os elementos do subconjunto encontrado são retornados pelo parametro subset.
-     * Retorna um vetor com a soma dos elementos e comprimento do subconjunto.
-     * O tamanho máximo do subconjunto é especificado pelo parametro max_size (inclusivo).
-     * Para garantir que o menor subconjunto seja encontrado, set deve estar ordenado em ordem decrescente.
-     * O comportamento da função é indefinido para target <= 0
+     * <p>Função para encontrar um subconjunto em set, cuja soma dos elementos é igual a target.</p>
+     * <p>Os elementos do subconjunto encontrado são retornados pelo parametro subset.</p>
+     * <p>Retorna um vetor com a soma dos elementos e comprimento do subconjunto.</p>
+     * <p>O tamanho máximo do subconjunto é especificado pelo parametro max_size (inclusivo).</p>
+     * <p>Para garantir que o menor subconjunto seja encontrado, set deve estar ordenado em ordem decrescente.</p>
+     * <p>O comportamento da função é indefinido para target <= 0</p>
      * @param target soma dos elementos do subconjunto
      * @param total deve ser 0
      * @param set conjunto a ser explorado
@@ -132,7 +203,7 @@ public class CaixaEletronico implements ICaixaEletronico {
      * @param subset vetor de comprimento igual a set
      * @param subset_len deve ser 0
      * @param max_size v
-     * @return {[0]=total do subconjunto, [1]=comprimento do subconjuto}
+     * @return {total_subconjunto, comprimento_subconjuto}
      */
     private static int[] findSubset(int target, int total, int set[], int set_pos, int subset[], int subset_len, int max_size) {
         int[] result = new int[2];
@@ -153,73 +224,5 @@ public class CaixaEletronico implements ICaixaEletronico {
             return result;
         }
         return result;
-    }
-
-    /**
-     * <p>Retorna uma matriz especificando a combinação de cédulas cuja soma seja igual ao alvo. 
-     * Se não existir uma combinação, o retorno é null.</p>
-     * <p>O número máximo de cédulas em uma combinação é especificado por max_cedulas. Se o valor for 0,
-     * o limite é: trunc(alvo / valor_menor_cedula)</p>
-     * <p>O valor e quantidade de cédulas deve ser especificado pelo parâmetro cédulas:
-     * a matriz fornecida deve ser composta por vetores de dois elementos, sendo o primeiro o valor da cédula e o 
-     * segundo a quantidade. As cédulas devem ser ordenadas pelo seu valor em ordem decrescente</p>
-     * <pre>
-     * Ex: new int[][]{
-     *      {200, 50},
-     *      {100, 32},
-     *      {50, 130},
-     *      {20, 150},
-     *      {10, 20}, 
-     *      {5, 42},
-     *      {2, 31}
-     * }
-     * </pre>
-     * <p>Atente-se ao fato de que vetores em Java sempre são mutáveis, e cedulas[][] 
-     * será diretamente modificado.</p>
-     * 
-     * @param alvo
-     * @param cedulas
-     * @param max_cedulas
-     * @return
-     */
-    private static int[][] combinacaoCedulas(int valor_saque, int[][] cedulas, int max_cedulas){
-        final int VALOR = 0, QUANTIDADE = 1;
-        if(max_cedulas <= 0){
-            max_cedulas = valor_saque / cedulas[cedulas.length -1][VALOR];
-        } 
-
-        int set_lenght = 0;
-        for(int i = 0; i < cedulas.length; i++){
-            cedulas[i][QUANTIDADE] = Math.min(cedulas[i][QUANTIDADE], (int)Math.ceil(valor_saque / cedulas[i][VALOR]));
-            cedulas[i][QUANTIDADE] = Math.min(cedulas[i][QUANTIDADE], max_cedulas);
-            set_lenght += cedulas[i][QUANTIDADE];
-        }
-
-        final int[] set = new int[set_lenght];
-        for(int i = 0, added = 0; i < cedulas.length; i++)
-        for(int j = 0; j < cedulas[i][QUANTIDADE]; j++)
-            set[added++] = cedulas[i][VALOR];
-        
-        final int[] subset = new int[set_lenght];
-        final int[] result = findSubset(valor_saque, 0, set, 0, subset, 0, max_cedulas);
-        if(result[0] != valor_saque){
-            return null;
-        }
-
-        final int SUBSET_LEN = result[1];
-        for(int i = 0, j = 0; i < cedulas.length; i++){
-            cedulas[i][QUANTIDADE] = 0;
-            while(j < SUBSET_LEN && subset[j] == cedulas[i][VALOR]){
-                cedulas[i][QUANTIDADE]++;
-                j++;
-            }
-        }
-
-        return cedulas;
-    }
-
-    public static void main(String arg[]){
-        GUI janela = new GUI(CaixaEletronico.class);
-        janela.show();
     }
 }
