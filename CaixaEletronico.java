@@ -1,6 +1,6 @@
 public class CaixaEletronico implements ICaixaEletronico {
-    final private static int VALOR = 0, QNTDE = 1;
-    final private static String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
+    private static final int VALOR = 0, QNTDE = 1;
+    private static final String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
         MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
 
     private int cotaMinima, maxCedulaSaque;
@@ -36,7 +36,7 @@ public class CaixaEletronico implements ICaixaEletronico {
   
     public String pegaRelatorioCedulas() {
         StringBuilder resposta = new StringBuilder();
-        for(int[] cedula : cedulas) {
+        for(int[] cedula : this.cedulas) {
             resposta.append("\"%3d\": %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
         }
         return resposta.toString();
@@ -54,7 +54,7 @@ public class CaixaEletronico implements ICaixaEletronico {
             return "Erro. Reposição realizada com quantidade negativa de cédulas";
         }
         
-        for (int[] ced : cedulas) {
+        for (int[] ced : this.cedulas) {
             if(ced[VALOR] == cedula) {
                 ced[QNTDE] += quantidade;
                 break;
@@ -88,7 +88,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     private boolean cedulaExiste(int valor_cedula) {
-        for(int[] cedula : cedulas){
+        for(int[] cedula : this.cedulas){
             if(valor_cedula == cedula[VALOR]) { return true; }
         }
         return false;
@@ -96,7 +96,7 @@ public class CaixaEletronico implements ICaixaEletronico {
 
     private int valorTotalDiposnivel() {
         int total = 0;
-        for(int[] cedula : cedulas) { total += cedula[VALOR] * cedula[QNTDE]; }
+        for(int[] cedula : this.cedulas) { total += cedula[VALOR] * cedula[QNTDE]; }
         return total;
     }
    
@@ -133,13 +133,14 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 }
 
-final class CombinadorRecusivo implements CaixaEletronico.ICombinador {
+class CombinadorRecusivo implements CaixaEletronico.ICombinador {
     /**
      * <p>Detalhes da implementação:</p>
      * <p>Se valor <= 0, o returno é null.</p>
      * <p>Se max_cedulas <= 0, o limite de cédulas é: trunc(alvo / valor_menor_cedula)</p>
      */
     public int[][] calcularCombinacao(int valor, int[][] cedulas, int max_cedulas) {
+        if(valor <= 0) { return null; }
         return calcularCedulasMutavel(valor, arrayDeepCopy(cedulas), max_cedulas);
     }
 
