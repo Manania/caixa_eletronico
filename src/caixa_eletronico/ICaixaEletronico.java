@@ -1,3 +1,4 @@
+package caixa_eletronico;
 public interface ICaixaEletronico {
     /**
     * Pega o valor total disponivel no caixa eletronico
