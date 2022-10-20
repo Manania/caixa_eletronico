@@ -3,7 +3,6 @@ public class CaixaEletronico implements ICaixaEletronico {
     private static final String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
         MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
 
-    private int cotaMinima, maxCedulaSaque;
     /**
      * Cada cedula possui um vetor próprio de comprimento dois. O primeiro elemento é o valor e o segundo a quantidade. 
      * <pre>
@@ -20,6 +19,7 @@ public class CaixaEletronico implements ICaixaEletronico {
      * </pre>
      */
     private int[][] cedulas;
+    private int cotaMinima, maxCedulaSaque;
     private ICombinador combinador;
 
     public CaixaEletronico() {
@@ -35,9 +35,9 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
   
     public String pegaRelatorioCedulas() {
-        StringBuilder resposta = new StringBuilder();
+        StringBuilder resposta = new StringBuilder( 9 * cedulas.length  );
         for(int[] cedula : this.cedulas) {
-            resposta.append("\"%3d\": %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
+            resposta.append("\"%d\": %d\n".formatted(cedula[VALOR], cedula[QNTDE]));
         }
         return resposta.toString();
     }
@@ -128,8 +128,8 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public static void main(String arg[]){
-        GUI janela = new GUI(CaixaEletronico.class);
-        janela.show();
+        //GUI janela = new GUI(CaixaEletronico.class);
+        //janela.show();
     }
 }
 
