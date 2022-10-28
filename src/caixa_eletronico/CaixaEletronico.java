@@ -64,7 +64,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String pegaValorTotalDisponivel() {
-        return String.format(Locale.ENGLISH, "R$ %.2f", (float)valorTotalDiposnivel());
+        return String.format(Locale.ENGLISH, "R$ %.2f\n", (float)valorTotalDiposnivel());
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
@@ -84,7 +84,7 @@ public class CaixaEletronico implements ICaixaEletronico {
                 break;
             }
         }
-        return "Cédula: \"R$ %d\"\nQuantidade adicionada: %d".formatted(cedula, quantidade);
+        return "Cédula: \"R$ %d\"\nQuantidade adicionada: %d\n".formatted(cedula, quantidade);
     }
 
     public String sacar(Integer valor) {
@@ -124,7 +124,7 @@ public class CaixaEletronico implements ICaixaEletronico {
         else { 
         	this.cotaMinima = 0; 
         }
-        return String.format(Locale.ENGLISH, "Cota minima de R$ %.2f registrada com sucesso", (float) cotaMinima);
+        return String.format(Locale.ENGLISH, "Cota minima de R$ %.2f registrada com sucesso\n", (float) cotaMinima);
     }
 
     private boolean cedulaExiste(int valor_cedula) {
