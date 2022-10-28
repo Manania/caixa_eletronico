@@ -107,7 +107,9 @@ public class CaixaEletronico implements ICaixaEletronico {
         
         StringBuilder str = new StringBuilder();
         for(int[] cedula : saque) {
-            str.append("%3d : %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));
+        	if(cedula[QNTDE] > 0 ) {
+        		str.append("%3d : %4d\n".formatted(cedula[VALOR], cedula[QNTDE]));	
+        	}
         }
         return str.toString();
     }
