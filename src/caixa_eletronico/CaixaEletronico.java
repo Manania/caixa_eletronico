@@ -6,9 +6,9 @@ import caixa_eletronico.combinadores.*;
 
 public class CaixaEletronico implements ICaixaEletronico {
     private static final int VALOR = 0, QNTDE = 1;
-    private static final String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
-        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas",
-        MSG_NULL_POINTER = "Erro. Não é possivel continuar a operação";
+    private static final String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador\n",
+        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas\n",
+        MSG_NULL_POINTER = "Erro. Não é possivel continuar a operação\n";
 
     /**
      * Cada cedula possui um vetor próprio de comprimento dois. O primeiro elemento é o valor e o segundo a quantidade. 
@@ -72,14 +72,17 @@ public class CaixaEletronico implements ICaixaEletronico {
     		return MSG_NULL_POINTER;
     	}
         if(!cedulaExiste(cedula)) {
-            return "Erro. Cédulas de valor R$ %d não são suportadas".formatted(cedula);
+            return "Erro. Cédulas de valor R$ %d não são suportadas\n".formatted(cedula);
         }
         if(quantidade < 0){
-            return "Erro. Reposição realizada com quantidade negativa de cédulas";
+            return "Erro. Reposição realizada com quantidade negativa de cédulas\n";
         }
         
         for (int[] ced : this.cedulas) {
             if(ced[VALOR] == cedula) {
+            	if(quantidade > Integer.MAX_VALUE - ced[QNTDE]) {
+            		return "Erro. Armazenamento maximo para cédulas de R$ %d atingido\n".formatted(cedula);
+            	}
                 ced[QNTDE] += quantidade;
                 break;
             }
@@ -92,7 +95,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     		return MSG_NULL_POINTER;
     	}
         if(valor <= 0 || valor == 1 || valor == 3) { 
-        	return "Não é possível sacar esse valor"; 
+        	return "Não é possível sacar esse valor\n"; 
         }
         if((valorTotalDiposnivel() - valor) < cotaMinima) { 
         	return MSG_VALOR_ABAIXO_MINIMO; 
