@@ -37,7 +37,7 @@ public class JFrameGUI extends JFrame {
 	
 		@Override
 		public java.lang.String toString() {
-			StringBuilder str = new StringBuilder(60); 
+			final StringBuilder str = new StringBuilder(60); 
 			if(tentativa == 0) {
 				return (("(t:0, s:0, c:0, f:0)\n"));
 			}
@@ -206,7 +206,7 @@ public class JFrameGUI extends JFrame {
 	}
 	
 	private String getTimestamp() {
-		return new SimpleDateFormat("d/M hh:mm:ss\n").format( Calendar.getInstance().getTime());
+		return new SimpleDateFormat("d/M HH:mm:ss\n").format( Calendar.getInstance().getTime());
 	}
 	
 	private void postTimestamp() {
@@ -219,73 +219,79 @@ public class JFrameGUI extends JFrame {
 	
 	private void sacar() {
 		++saqueStat.tentativa;
-		String saldoInicial = cx.pegaValorTotalDisponivel();
+		final String TITULO = "Saque";
+		final String SALDO_INICIAL = cx.pegaValorTotalDisponivel();
 		try {
-			final String userV = JOptionPane.showInputDialog("Valor do saque", 0);
-			if(userV == null) {
+			final String STR_VALUE = (String) JOptionPane.showInputDialog(this, "Valor do saque", TITULO, 
+					JOptionPane.QUESTION_MESSAGE, null, null, 0);
+			if(STR_VALUE == null) {
 				++saqueStat.cancelamento;
 				return;
 			}
-			final Integer v = Integer.valueOf(userV);
-			final String saque = cx.sacar(v);
-			JOptionPane.showMessageDialog(this, saque);
-			final String saldoFinal = cx.pegaValorTotalDisponivel();
+			final Integer VALUE = Integer.valueOf(STR_VALUE);
+			JOptionPane.showMessageDialog(this, cx.sacar(VALUE), TITULO, JOptionPane.INFORMATION_MESSAGE);
+			final String SALDO_FINAL = cx.pegaValorTotalDisponivel();
 			
-			if(!saldoFinal.equals(saldoInicial)) {
+			if(!SALDO_FINAL.equals(SALDO_INICIAL)) {
 				++saqueStat.sucesso;
 				postTimestamp();
-				relatorio.append(String.format(Locale.ENGLISH, "Saque: R$ %.2f\n", v.floatValue()));
+				relatorio.append(String.format(Locale.ENGLISH, "Saque: R$ %.2f\n", VALUE.floatValue()));
 				postSaldo();
 			}
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.sacar(null));
+			JOptionPane.showMessageDialog(this, cx.sacar(null), TITULO, JOptionPane.WARNING_MESSAGE);
 		}
 	}
 	
 	private void reporCedulas() {
 		++reposicaoStat.tentativa;
-		String saldoInicial = cx.pegaValorTotalDisponivel();
+		final String TITULO = "Reposição de cédulas";
+		final String SALDO_INICIAL = cx.pegaValorTotalDisponivel();
 		try {				
-			final String userV =  JOptionPane.showInputDialog("Valor da cédula", 0);
+			final String userV =  (String) JOptionPane.showInputDialog(this, "Valor da cédula", TITULO, 
+					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userV == null) { 
 				++reposicaoStat.cancelamento;
 				return; 
 			}
 			final Integer v = Integer.valueOf(userV);
-			final String userQ =  JOptionPane.showInputDialog("Quantidade", 0);
+			final String userQ = (String) JOptionPane.showInputDialog(this, "Quantidade", TITULO, 
+					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userQ == null) { 
 				++reposicaoStat.cancelamento;
 				return; 
 			}
 			final Integer q = Integer.valueOf(userQ);
-			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(v, q));
-			
-			final String saldoFinal = cx.pegaValorTotalDisponivel();
-			if(!saldoFinal.equals(saldoInicial)) {
+			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(v, q), TITULO, 
+					JOptionPane.INFORMATION_MESSAGE);
+			final String SALDO_FINAL = cx.pegaValorTotalDisponivel();
+			if(!SALDO_FINAL.equals(SALDO_INICIAL)) {
 				++reposicaoStat.sucesso;
 				postTimestamp();
 				relatorio.append(String.format(Locale.ENGLISH, "Reposicao: R$ %.2f\n", q.floatValue() * v.floatValue()));
 				postSaldo();
 			}
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(null, null));
+			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(null, null), TITULO, JOptionPane.WARNING_MESSAGE);
 		}
 	}
 	
 	private void registrarCota() {
 		++cotaStat.tentativa;
+		final String titulo = "Cota Minima";
 		try {				
-			final String userMin =  JOptionPane.showInputDialog("Valor da cota minima", 0);
+			final String userMin =  (String) JOptionPane.showInputDialog(this, "Valor da cota minima", titulo, 
+					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userMin == null) { 
 				++cotaStat.cancelamento;
 				return; 
 			}
 			final Integer min = Integer.valueOf(userMin);
-			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min));
+			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min), titulo, JOptionPane.INFORMATION_MESSAGE);
 			++cotaStat.sucesso;
 			return;
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null));
+			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null), titulo, JOptionPane.WARNING_MESSAGE);
 		}		
 	}
 	
