@@ -81,8 +81,12 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String sacar(Integer valor) {
-        if(valor <= 0) { return "Erro. Valor de saque invalido"; }
-        if((valorTotalDiposnivel() - valor) < cotaMinima) { return MSG_VALOR_ABAIXO_MINIMO; }
+        if(valor <= 0 || valor == 1 || valor == 3) { 
+        	return "Não é possível sacar esse valor"; 
+        }
+        if((valorTotalDiposnivel() - valor) < cotaMinima) { 
+        	return MSG_VALOR_ABAIXO_MINIMO; 
+        }
 
         int[][] saque = combinador.calcularCombinacao(valor, this.cedulas, this.maxCedulaSaque);
         if(saque == null) { return MSG_SAQUE_INDISPONIVEL; }
