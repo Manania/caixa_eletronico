@@ -29,18 +29,22 @@ public class CaixaEletronico implements ICaixaEletronico {
     private ICombinador combinador;
 
     public CaixaEletronico() {
-        this(new int[][] { 
-            {100, 0}, 
-            { 50, 0}, 
-            { 20, 0}, 
-            { 10, 0}, 
-            {  5, 0}, 
-            {  2, 0} 
-        }, 
-        0, 30, new CombinadorRecursivo());       
+        this(new CombinadorRecursivo());   
     }
 
-    private CaixaEletronico(int[][] cedulas, int cotaMinima, int maxCedulaSaque, ICombinador combinador){
+    public CaixaEletronico(ICombinador combinador){
+        this(new int[][] { 
+            {100, 100}, 
+            { 50, 200}, 
+            { 20, 300}, 
+            { 10, 350}, 
+            {  5, 450}, 
+            {  2, 500} 
+        }, 
+        0, 30, combinador);  
+    }
+    
+    protected CaixaEletronico(int[][] cedulas, int cotaMinima, int maxCedulaSaque, ICombinador combinador){
         this.cedulas = cedulas;
         this.cotaMinima = cotaMinima;
         this.maxCedulaSaque = maxCedulaSaque;
