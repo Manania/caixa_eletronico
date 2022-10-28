@@ -1,5 +1,7 @@
 package caixa_eletronico;
 
+import java.util.Locale;
+
 import caixa_eletronico.combinadores.*;
 
 public class CaixaEletronico implements ICaixaEletronico {
@@ -54,7 +56,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String pegaValorTotalDisponivel() {
-        return "R$ %.2d".formatted(valorTotalDiposnivel());
+        return String.format(Locale.ENGLISH, "R$ %.2f", (float)valorTotalDiposnivel());
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
@@ -71,7 +73,7 @@ public class CaixaEletronico implements ICaixaEletronico {
                 break;
             }
         }
-        return "Cédula: %d\nQuantidade adicionada: %d".formatted(cedula, quantidade);
+        return "Cédula: \"%d\"\nQuantidade adicionada: %d".formatted(cedula, quantidade);
     }
 
     public String sacar(Integer valor) {
