@@ -7,7 +7,8 @@ import caixa_eletronico.combinadores.*;
 public class CaixaEletronico implements ICaixaEletronico {
     private static final int VALOR = 0, QNTDE = 1;
     private static final String MSG_VALOR_ABAIXO_MINIMO = "Caixa Vazio: Chame o Operador",
-        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas";
+        MSG_SAQUE_INDISPONIVEL = "Saque não realizado por falta de cédulas",
+        MSG_NULL_POINTER = "Erro. Não é possivel continuar a operação";
 
     /**
      * Cada cedula possui um vetor próprio de comprimento dois. O primeiro elemento é o valor e o segundo a quantidade. 
@@ -32,7 +33,7 @@ public class CaixaEletronico implements ICaixaEletronico {
         this(new CombinadorRecursivo());   
     }
 
-    public CaixaEletronico(ICombinador combinador){
+    public CaixaEletronico(ICombinador combinador) {
         this(new int[][] { 
             {100, 100}, 
             { 50, 200}, 
@@ -44,10 +45,13 @@ public class CaixaEletronico implements ICaixaEletronico {
         0, 30, combinador);  
     }
     
-    protected CaixaEletronico(int[][] cedulas, int cotaMinima, int maxCedulaSaque, ICombinador combinador){
+    protected CaixaEletronico(int[][] cedulas, int cotaMinima, int maxCedulaSaque, ICombinador combinador) {
         this.cedulas = cedulas;
         this.cotaMinima = cotaMinima;
         this.maxCedulaSaque = maxCedulaSaque;
+        if(combinador == null) {
+        	throw new NullPointerException();
+        }
         this.combinador = combinador;
     }
   
@@ -64,6 +68,9 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
+    	if(cedula == null || quantidade == null) {
+    		return MSG_NULL_POINTER;
+    	}
         if(!cedulaExiste(cedula)) {
             return "Erro. Cédulas de valor R$ %d não são suportadas".formatted(cedula);
         }
@@ -81,6 +88,9 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String sacar(Integer valor) {
+    	if(valor == null) {
+    		return MSG_NULL_POINTER;
+    	}
         if(valor <= 0 || valor == 1 || valor == 3) { 
         	return "Não é possível sacar esse valor"; 
         }
@@ -103,8 +113,15 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String armazenaCotaMinima(Integer minimo) {
-        if(minimo > 0) { this.cotaMinima = minimo; } 
-        else { this.cotaMinima = 0; }
+    	if(minimo == null) {
+    		return MSG_NULL_POINTER;
+    	}
+        if(minimo > 0) { 
+        	this.cotaMinima = minimo; 
+        } 
+        else { 
+        	this.cotaMinima = 0; 
+        }
         return "Cota minima registrada com sucesso";
     }
 
