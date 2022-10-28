@@ -84,7 +84,7 @@ public class CaixaEletronico implements ICaixaEletronico {
                 break;
             }
         }
-        return "Cédula: \"%d\"\nQuantidade adicionada: %d".formatted(cedula, quantidade);
+        return "Cédula: \"R$ %d\"\nQuantidade adicionada: %d".formatted(cedula, quantidade);
     }
 
     public String sacar(Integer valor) {
@@ -122,7 +122,7 @@ public class CaixaEletronico implements ICaixaEletronico {
         else { 
         	this.cotaMinima = 0; 
         }
-        return "Cota minima registrada com sucesso";
+        return String.format(Locale.ENGLISH, "Cota minima de R$ %.2f registrada com sucesso", (float) cotaMinima);
     }
 
     private boolean cedulaExiste(int valor_cedula) {
