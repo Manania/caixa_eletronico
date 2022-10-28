@@ -1,5 +1,6 @@
 package caixa_eletronico;
 
+import java.math.BigInteger;
 import java.util.Locale;
 
 import caixa_eletronico.combinadores.*;
@@ -64,7 +65,7 @@ public class CaixaEletronico implements ICaixaEletronico {
     }
 
     public String pegaValorTotalDisponivel() {
-        return String.format(Locale.ENGLISH, "R$ %.2f\n", (float)valorTotalDiposnivel());
+        return String.format(Locale.ENGLISH, "R$ %d.00\n", valorTotalDiposnivel());
     }
 
     public String reposicaoCedulas(Integer cedula, Integer quantidade) {
@@ -97,7 +98,8 @@ public class CaixaEletronico implements ICaixaEletronico {
         if(valor <= 0 || valor == 1 || valor == 3) { 
         	return "Não é possível sacar esse valor\n"; 
         }
-        if((valorTotalDiposnivel() - valor) < cotaMinima) { 
+        if(valorTotalDiposnivel().subtract(BigInteger.valueOf(valor))
+        		.compareTo(BigInteger.valueOf(cotaMinima)) < 0) {
         	return MSG_VALOR_ABAIXO_MINIMO; 
         }
 
@@ -137,9 +139,13 @@ public class CaixaEletronico implements ICaixaEletronico {
         return false;
     }
 
-    private int valorTotalDiposnivel() {
-        int total = 0;
-        for(int[] cedula : this.cedulas) { total += cedula[VALOR] * cedula[QNTDE]; }
+    private BigInteger valorTotalDiposnivel() {
+    	BigInteger total = BigInteger.valueOf(0);
+        for(int[] cedula : this.cedulas) {
+        	total = BigInteger.valueOf(cedula[VALOR])
+        			.multiply(BigInteger.valueOf(cedula[QNTDE]))
+        			.add(total); 
+        }
         return total;
     }
    
