@@ -4,7 +4,6 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -12,16 +11,45 @@ import javax.swing.JOptionPane;
 
 import java.awt.GridBagConstraints;
 import java.awt.Font;
+
 import javax.swing.JButton;
 import java.awt.Insets;
+import java.awt.TextArea;
 import java.awt.event.WindowEvent;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 import caixa_eletronico.ICaixaEletronico;
 import caixa_eletronico.CaixaEletronico;
 
 public class JFrameGUI extends JFrame {
 	private JPanel contentPane;
-	private ICaixaEletronico cx = new CaixaEletronico();
+	private ICaixaEletronico cx;
+	private StringBuilder relatorio;
+	private Stats saqueStat = new Stats(), relatorioStat = new Stats(), valorTotalStat = new Stats(), 
+			reposicaoStat = new Stats(), cotaStat = new Stats();
+	
+	private class Stats{
+		public int sucesso;
+		public int tentativa;
+		public int cancelamento;
+	
+		@Override
+		public java.lang.String toString() {
+			StringBuilder str = new StringBuilder(60); 
+			if(tentativa == 0) {
+				return (("(t:0, s:0, c:0, f:0)\n"));
+			}
+			str.append(String.format(Locale.ENGLISH, "(t:%d", tentativa));
+			str.append(String.format(Locale.ENGLISH, ", s:%d (%.2f %%)", sucesso, 100 * sucesso / (float) tentativa ));
+			str.append(String.format(Locale.ENGLISH, ", c:%d (%.2f %%)", cancelamento, 100 * cancelamento / (float) tentativa ));
+			int fracasso = tentativa - sucesso - cancelamento;
+			str.append(String.format(Locale.ENGLISH, ", f:%d (%.2f %%))\n", fracasso, 100 *  fracasso / (float) tentativa ));
+			return str.toString();
+		}
+		
+	}
 
 	/**
 	 * Launch the application.
@@ -49,12 +77,16 @@ public class JFrameGUI extends JFrame {
 	
 	public JFrameGUI(ICaixaEletronico cx) {
 		this.cx = cx;
+		this.relatorio = new StringBuilder();
+		postTimestamp();
+		postSaldo();
 		
 		setTitle("Caixa eletronico");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 280, 321);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setLocationRelativeTo(null);
 
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
@@ -144,67 +176,134 @@ public class JFrameGUI extends JFrame {
 		gbc_btnSair.fill = GridBagConstraints.HORIZONTAL;
 		contentPane.add(btnSair, gbc_btnSair);
 		
-		btnSaque.addActionListener((l) -> {
-			try {
-				final String userV = JOptionPane.showInputDialog("Valor do saque", 0);
-				if(userV == null) {
-					return;
-				}
-				final Integer v = Integer.valueOf(userV);
-				JOptionPane.showMessageDialog(this, cx.sacar(v));
-				return;
-			} catch (NumberFormatException e) { 
-				JOptionPane.showMessageDialog(this, cx.sacar(null));
-			}
-		});
+		btnSaque.addActionListener((l) -> { sacar(); });
 		
 		btnRelatorio.addActionListener((l) -> {
+			++relatorioStat.tentativa;
 			JOptionPane.showMessageDialog(this, cx.pegaRelatorioCedulas(), 
 					"Relatorio de cédulas", JOptionPane.INFORMATION_MESSAGE);
 		});
 		
 		btnValorTotal.addActionListener((l) -> {
+			++valorTotalStat.tentativa;
 			JOptionPane.showMessageDialog(this, cx.pegaValorTotalDisponivel(), 
 					"Valor total disponivel", JOptionPane.INFORMATION_MESSAGE);
 		});
 		
-		btnReposicao.addActionListener((l) -> {
-			try {				
-				final String userV =  JOptionPane.showInputDialog("Valor da cédula", 0);
-				if(userV == null) { 
-					return; 
-				}
-				final Integer v = Integer.valueOf(userV);
-				final String userQ =  JOptionPane.showInputDialog("Quantidade", 0);
-				if(userQ == null) { 
-					return; 
-				}
-				final Integer q = Integer.valueOf(userQ);
-				JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(v, q));
-				return;
-			} catch (NumberFormatException e) { 
-				JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(null, null));
-			}		
-		});
+		btnReposicao.addActionListener((l) -> { reporCedulas(); });
 		
-		btnCota.addActionListener((l) -> {
-			try {				
-				final String userMin =  JOptionPane.showInputDialog("Valor da cota minima", 0);
-				if(userMin == null) { 
-					return; 
-				}
-				final Integer min = Integer.valueOf(userMin);
-				JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min));
-				return;
-			} catch (NumberFormatException e) { 
-				JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null));
-			}		
-		});
+		btnCota.addActionListener((l) -> { registrarCota(); });
 		
 		
-		btnSair.addActionListener((l) -> { 
+		btnSair.addActionListener((l) -> {
+			JPanel textPanel = new JPanel();
+			textPanel.add( new TextArea( getAtmStatement() ) );
+			JOptionPane.showMessageDialog(this, textPanel, "Relatorio da sessão", JOptionPane.INFORMATION_MESSAGE);
 			this.dispatchEvent( new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
 		});
+		
+		
 	}
 	
+	private String getTimestamp() {
+		return new SimpleDateFormat("d/M hh:mm:ss\n").format( Calendar.getInstance().getTime());
+	}
+	
+	private void postTimestamp() {
+		relatorio.append(getTimestamp());
+	}
+	
+	private void postSaldo() {
+		relatorio.append("Saldo: %s\n".formatted(cx.pegaValorTotalDisponivel().strip()));
+	}
+	
+	private void sacar() {
+		++saqueStat.tentativa;
+		String saldoInicial = cx.pegaValorTotalDisponivel();
+		try {
+			final String userV = JOptionPane.showInputDialog("Valor do saque", 0);
+			if(userV == null) {
+				++saqueStat.cancelamento;
+				return;
+			}
+			final Integer v = Integer.valueOf(userV);
+			final String saque = cx.sacar(v);
+			JOptionPane.showMessageDialog(this, saque);
+			final String saldoFinal = cx.pegaValorTotalDisponivel();
+			
+			if(!saldoFinal.equals(saldoInicial)) {
+				++saqueStat.sucesso;
+				postTimestamp();
+				relatorio.append(String.format(Locale.ENGLISH, "Saque: R$ %.2f\n", v.floatValue()));
+				postSaldo();
+			}
+		} catch (NumberFormatException e) { 
+			JOptionPane.showMessageDialog(this, cx.sacar(null));
+		}
+	}
+	
+	private void reporCedulas() {
+		++reposicaoStat.tentativa;
+		String saldoInicial = cx.pegaValorTotalDisponivel();
+		try {				
+			final String userV =  JOptionPane.showInputDialog("Valor da cédula", 0);
+			if(userV == null) { 
+				++reposicaoStat.cancelamento;
+				return; 
+			}
+			final Integer v = Integer.valueOf(userV);
+			final String userQ =  JOptionPane.showInputDialog("Quantidade", 0);
+			if(userQ == null) { 
+				++reposicaoStat.cancelamento;
+				return; 
+			}
+			final Integer q = Integer.valueOf(userQ);
+			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(v, q));
+			
+			final String saldoFinal = cx.pegaValorTotalDisponivel();
+			if(!saldoFinal.equals(saldoInicial)) {
+				++reposicaoStat.sucesso;
+				postTimestamp();
+				relatorio.append(String.format(Locale.ENGLISH, "Reposicao: R$ %.2f\n", q.floatValue() * v.floatValue()));
+				postSaldo();
+			}
+		} catch (NumberFormatException e) { 
+			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(null, null));
+		}
+	}
+	
+	private void registrarCota() {
+		++cotaStat.tentativa;
+		try {				
+			final String userMin =  JOptionPane.showInputDialog("Valor da cota minima", 0);
+			if(userMin == null) { 
+				++cotaStat.cancelamento;
+				return; 
+			}
+			final Integer min = Integer.valueOf(userMin);
+			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min));
+			++cotaStat.sucesso;
+			return;
+		} catch (NumberFormatException e) { 
+			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null));
+		}		
+	}
+	
+	private String getAtmStatement() {
+		return relatorio.toString();
+	}
+		
+	private String getSessionStats() {
+		StringBuilder str = new StringBuilder(30 * 5);
+		str.append("Saque: " + saqueStat);
+		str.append("Relatorio: " + relatorioStat);
+		str.append("Valor total: " + valorTotalStat);
+		str.append("Reposicao: " + reposicaoStat);
+		str.append("Cota: " + cotaStat);
+		return str.toString();
+	}
+	
+	private String getFullLog() {
+		return getAtmStatement() + getSessionStats();
+	}
 }
