@@ -27,29 +27,6 @@ public class JFrameGUI extends JFrame {
 	private JPanel contentPane;
 	private ICaixaEletronico cx;
 	private StringBuilder relatorio;
-	private Stats saqueStat = new Stats(), relatorioStat = new Stats(), valorTotalStat = new Stats(), 
-			reposicaoStat = new Stats(), cotaStat = new Stats();
-	
-	private class Stats{
-		public int sucesso;
-		public int tentativa;
-		public int cancelamento;
-	
-		@Override
-		public java.lang.String toString() {
-			final StringBuilder str = new StringBuilder(60); 
-			if(tentativa == 0) {
-				return (("(t:0, s:0, c:0, f:0)\n"));
-			}
-			str.append(String.format(Locale.ENGLISH, "(t:%d", tentativa));
-			str.append(String.format(Locale.ENGLISH, ", s:%d (%.2f %%)", sucesso, 100 * sucesso / (float) tentativa ));
-			str.append(String.format(Locale.ENGLISH, ", c:%d (%.2f %%)", cancelamento, 100 * cancelamento / (float) tentativa ));
-			int fracasso = tentativa - sucesso - cancelamento;
-			str.append(String.format(Locale.ENGLISH, ", f:%d (%.2f %%))\n", fracasso, 100 *  fracasso / (float) tentativa ));
-			return str.toString();
-		}
-		
-	}
 
 	/**
 	 * Launch the application.
@@ -179,13 +156,11 @@ public class JFrameGUI extends JFrame {
 		btnSaque.addActionListener((l) -> { sacar(); });
 		
 		btnRelatorio.addActionListener((l) -> {
-			++relatorioStat.tentativa;
 			JOptionPane.showMessageDialog(this, cx.pegaRelatorioCedulas(), 
 					"Relatorio de cédulas", JOptionPane.INFORMATION_MESSAGE);
 		});
 		
 		btnValorTotal.addActionListener((l) -> {
-			++valorTotalStat.tentativa;
 			JOptionPane.showMessageDialog(this, cx.pegaValorTotalDisponivel(), 
 					"Valor total disponivel", JOptionPane.INFORMATION_MESSAGE);
 		});
@@ -218,14 +193,12 @@ public class JFrameGUI extends JFrame {
 	}
 	
 	private void sacar() {
-		++saqueStat.tentativa;
 		final String TITULO = "Saque";
 		final String SALDO_INICIAL = cx.pegaValorTotalDisponivel();
 		try {
 			final String STR_VALUE = (String) JOptionPane.showInputDialog(this, "Valor do saque", TITULO, 
 					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(STR_VALUE == null) {
-				++saqueStat.cancelamento;
 				return;
 			}
 			final Integer VALUE = Integer.valueOf(STR_VALUE);
@@ -233,7 +206,6 @@ public class JFrameGUI extends JFrame {
 			final String SALDO_FINAL = cx.pegaValorTotalDisponivel();
 			
 			if(!SALDO_FINAL.equals(SALDO_INICIAL)) {
-				++saqueStat.sucesso;
 				postTimestamp();
 				relatorio.append(String.format(Locale.ENGLISH, "Saque: R$ %.2f\n", VALUE.floatValue()));
 				postSaldo();
@@ -244,21 +216,18 @@ public class JFrameGUI extends JFrame {
 	}
 	
 	private void reporCedulas() {
-		++reposicaoStat.tentativa;
 		final String TITULO = "Reposição de cédulas";
 		final String SALDO_INICIAL = cx.pegaValorTotalDisponivel();
 		try {				
 			final String userV =  (String) JOptionPane.showInputDialog(this, "Valor da cédula", TITULO, 
 					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userV == null) { 
-				++reposicaoStat.cancelamento;
 				return; 
 			}
 			final Integer v = Integer.valueOf(userV);
 			final String userQ = (String) JOptionPane.showInputDialog(this, "Quantidade", TITULO, 
 					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userQ == null) { 
-				++reposicaoStat.cancelamento;
 				return; 
 			}
 			final Integer q = Integer.valueOf(userQ);
@@ -266,7 +235,6 @@ public class JFrameGUI extends JFrame {
 					JOptionPane.INFORMATION_MESSAGE);
 			final String SALDO_FINAL = cx.pegaValorTotalDisponivel();
 			if(!SALDO_FINAL.equals(SALDO_INICIAL)) {
-				++reposicaoStat.sucesso;
 				postTimestamp();
 				relatorio.append(String.format(Locale.ENGLISH, "Reposicao: R$ %.2f\n", q.floatValue() * v.floatValue()));
 				postSaldo();
@@ -277,18 +245,15 @@ public class JFrameGUI extends JFrame {
 	}
 	
 	private void registrarCota() {
-		++cotaStat.tentativa;
 		final String titulo = "Cota Minima";
 		try {				
 			final String userMin =  (String) JOptionPane.showInputDialog(this, "Valor da cota minima", titulo, 
 					JOptionPane.QUESTION_MESSAGE, null, null, 0);
 			if(userMin == null) { 
-				++cotaStat.cancelamento;
 				return; 
 			}
 			final Integer min = Integer.valueOf(userMin);
 			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min), titulo, JOptionPane.INFORMATION_MESSAGE);
-			++cotaStat.sucesso;
 			return;
 		} catch (NumberFormatException e) { 
 			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null), titulo, JOptionPane.WARNING_MESSAGE);
@@ -298,18 +263,5 @@ public class JFrameGUI extends JFrame {
 	private String getAtmStatement() {
 		return relatorio.toString();
 	}
-		
-	private String getSessionStats() {
-		StringBuilder str = new StringBuilder(30 * 5);
-		str.append("Saque: " + saqueStat);
-		str.append("Relatorio: " + relatorioStat);
-		str.append("Valor total: " + valorTotalStat);
-		str.append("Reposicao: " + reposicaoStat);
-		str.append("Cota: " + cotaStat);
-		return str.toString();
-	}
-	
-	private String getFullLog() {
-		return getAtmStatement() + getSessionStats();
-	}
+
 }
