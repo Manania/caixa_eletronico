@@ -98,8 +98,7 @@ public class CaixaEletronico implements ICaixaEletronico {
         if(valor <= 0 || valor == 1 || valor == 3) { 
         	return "Não é possível sacar esse valor\n"; 
         }
-        if(valorTotalDiposnivel().subtract(BigInteger.valueOf(valor))
-        		.compareTo(BigInteger.valueOf(cotaMinima)) < 0) {
+        if(valorTotalDiposnivel().compareTo(BigInteger.valueOf(cotaMinima)) <= 0) {
         	return MSG_VALOR_ABAIXO_MINIMO; 
         }
 
