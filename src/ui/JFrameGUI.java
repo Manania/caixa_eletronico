@@ -24,6 +24,7 @@ import caixa_eletronico.ICaixaEletronico;
 import caixa_eletronico.CaixaEletronico;
 
 public class JFrameGUI extends JFrame {
+	private static final String MSG_ERRO_GENERICO = "Erro. Não é possível continuar a operação\n";
 	private JPanel contentPane;
 	private ICaixaEletronico cx;
 	private StringBuilder relatorio;
@@ -211,7 +212,7 @@ public class JFrameGUI extends JFrame {
 				postSaldo();
 			}
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.sacar(null), TITULO, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(this, MSG_ERRO_GENERICO, TITULO, JOptionPane.WARNING_MESSAGE);
 		}
 	}
 	
@@ -240,7 +241,7 @@ public class JFrameGUI extends JFrame {
 				postSaldo();
 			}
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.reposicaoCedulas(null, null), TITULO, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(this, MSG_ERRO_GENERICO, TITULO, JOptionPane.WARNING_MESSAGE);
 		}
 	}
 	
@@ -256,7 +257,7 @@ public class JFrameGUI extends JFrame {
 			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(min), titulo, JOptionPane.INFORMATION_MESSAGE);
 			return;
 		} catch (NumberFormatException e) { 
-			JOptionPane.showMessageDialog(this, cx.armazenaCotaMinima(null), titulo, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(this, MSG_ERRO_GENERICO, titulo, JOptionPane.WARNING_MESSAGE);
 		}		
 	}
 	
