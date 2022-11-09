@@ -77,7 +77,7 @@ public class CombinadorRecursivo implements CaixaEletronico.ICombinador {
      */
     private static int[] findSubset_r(int target, int total, int set[], int set_pos, int subset[], int subset_len, int max_size) {
         int[] result = new int[2];
-        if(subset_len == max_size || set_pos >= set.length || subset_len >= subset.length || total == target) {
+        if(subset_len == max_size || set_pos >= set.length || total == target) {
             result[0] = total;
             result[1] = subset_len;
             return result;
@@ -88,7 +88,7 @@ public class CombinadorRecursivo implements CaixaEletronico.ICombinador {
             return result;
         }
         
-        while(set_pos < (set.length -1) && set[set_pos] == set[set_pos + 1]) { set_pos++; }
+        while(set_pos < (set.length -1) && set[set_pos] == set[set_pos + 1]) { ++set_pos; }
 
         if((result = findSubset_r(target, total, set, set_pos + 1, subset, subset_len, max_size))[0] == target) {
             return result;
