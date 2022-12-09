@@ -9,16 +9,4 @@ Atividade para a disciplina de Programação Orientada a Objetos: implementar a 
 
 - [x] Implementar ICaixaEletronico
 - [x] Criar a GUI
-- [ ] Testar os requisitos funcionais
-
-## Proteção contra bugs comuns
-- [x] Overflow em operações aritméticas
-
-- [x] Referência Nula
-
-- [ ] StackOverflow
-
-- [x] HeapOverflow
-
-- [ ] Vazamento de memória
-
+- [x] Testar os requisitos funcionais
